@@ -7,6 +7,7 @@ import 'src/currency_list_bottom_sheet.dart' as currency_list;
 import 'src/currency_picker_theme_data.dart';
 
 export 'package:currency_picker/src/currency.dart';
+export 'package:currency_picker/src/currency_list_view.dart';
 export 'package:currency_picker/src/currency_picker_theme_data.dart';
 export 'package:currency_picker/src/currency_service.dart';
 export 'package:currency_picker/src/currency_utils.dart';

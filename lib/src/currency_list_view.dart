@@ -154,20 +154,103 @@ class _CurrencyListViewState extends State<CurrencyListView> {
   }
 
   Widget _listRow(Currency currency) {
+    return CurrencyListTile(
+      currency: currency,
+      theme: widget.theme,
+      onTap: () {
+        widget.onSelect.call(currency);
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      },
+    );
+  }
+
+  void _filterSearchResults(String query) {
+    List<Currency> _searchResult = <Currency>[];
+
+    if (query.isEmpty) {
+      _searchResult.addAll(_currencyList);
+    } else {
+      _searchResult = _currencyList
+          .where((c) =>
+              c.name.toLowerCase().contains(query.toLowerCase()) ||
+              c.code.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
+
+    setState(() => _filteredList = _searchResult);
+  }
+}
+
+class CurrencyListTile extends StatelessWidget {
+  final Currency currency;
+  final CurrencyPickerThemeData? theme;
+
+  /// Called when a currency is select.
+  ///
+  /// The currency picker passes the new value to the callback.
+  final VoidCallback? onTap;
+
+  /// Shows flag for each currency (optional).
+  ///
+  /// Defaults true.
+  final bool showFlag;
+
+  /// Shows currency name (optional).
+  /// [showCurrencyName] and [showCurrencyCode] cannot be both false
+  ///
+  /// Defaults true.
+  final bool showCurrencyName;
+
+  /// Shows currency code (optional).
+  /// [showCurrencyCode] and [showCurrencyName] cannot be both false
+  ///
+  /// Defaults true.
+  final bool showCurrencyCode;
+
+  /// show if currency is selected
+  final bool selected;
+
+  const CurrencyListTile({
+    Key? key,
+    required this.currency,
+    this.theme,
+    this.showFlag = true,
+    this.showCurrencyName = true,
+    this.showCurrencyCode = true,
+    this.selected = false,
+    this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+    final _defaultTitleTextStyle = TextStyle(
+      fontSize: 17,
+      color: selected
+          ? themeData.listTileTheme.selectedTileColor
+          : themeData.textTheme.bodyText1?.color,
+    );
+    final _defaultSubtitleTextStyle = TextStyle(
+      fontSize: 15,
+      color: selected
+          ? themeData.listTileTheme.selectedTileColor
+          : themeData.hintColor,
+    );
     final TextStyle _titleTextStyle =
-        widget.theme?.titleTextStyle ?? _defaultTitleTextStyle;
+        theme?.titleTextStyle ?? _defaultTitleTextStyle;
     final TextStyle _subtitleTextStyle =
-        widget.theme?.subtitleTextStyle ?? _defaultSubtitleTextStyle;
+        theme?.subtitleTextStyle ?? _defaultSubtitleTextStyle;
+    final Color backgroundColor =
+        selected ? themeData.cardColor : Colors.transparent;
 
     return Material(
       // Add Material Widget with transparent color
       // so the ripple effect of InkWell will show on tap
-      color: Colors.transparent,
+      color: backgroundColor,
       child: InkWell(
-        onTap: () {
-          widget.onSelect(currency);
-          Navigator.pop(context);
-        },
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
           child: Row(
@@ -175,13 +258,15 @@ class _CurrencyListViewState extends State<CurrencyListView> {
             children: <Widget>[
               Expanded(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(width: 15),
-                    if (widget.showFlag) ...[
+                    if (showFlag) ...[
                       Text(
                         CurrencyUtils.currencyToEmoji(currency),
                         style: TextStyle(
-                          fontSize: widget.theme?.flagSize ?? 25,
+                          fontSize: theme?.flagSize ?? 25,
                         ),
                       ),
                       const SizedBox(width: 15),
@@ -189,21 +274,20 @@ class _CurrencyListViewState extends State<CurrencyListView> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (widget.showCurrencyCode) ...[
+                          if (showCurrencyCode)
                             Text(
                               currency.code,
                               style: _titleTextStyle,
                             ),
-                          ],
-                          if (widget.showCurrencyName) ...[
+                          if (showCurrencyName)
                             Text(
                               currency.name,
-                              style: widget.showCurrencyCode
+                              style: showCurrencyCode
                                   ? _subtitleTextStyle
                                   : _titleTextStyle,
-                            ),
-                          ]
+                            )
                         ],
                       ),
                     ),
@@ -223,24 +307,4 @@ class _CurrencyListViewState extends State<CurrencyListView> {
       ),
     );
   }
-
-  void _filterSearchResults(String query) {
-    List<Currency> _searchResult = <Currency>[];
-
-    if (query.isEmpty) {
-      _searchResult.addAll(_currencyList);
-    } else {
-      _searchResult = _currencyList
-          .where((c) =>
-              c.name.toLowerCase().contains(query.toLowerCase()) ||
-              c.code.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    }
-
-    setState(() => _filteredList = _searchResult);
-  }
-
-  TextStyle get _defaultTitleTextStyle => const TextStyle(fontSize: 17);
-  TextStyle get _defaultSubtitleTextStyle =>
-      TextStyle(fontSize: 15, color: Theme.of(context).hintColor);
 }
